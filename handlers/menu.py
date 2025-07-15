@@ -21,7 +21,6 @@ async def send_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, use
         [InlineKeyboardButton("Философия", callback_data='philosophy')],
         [InlineKeyboardButton("О Karban", callback_data='about_menu')],
         [InlineKeyboardButton("Дневник", callback_data="diary")]
-
     ]
     text = "Главное меню Karban. Выбери раздел:"
     if update.callback_query:
