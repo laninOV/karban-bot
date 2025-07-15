@@ -1,78 +1,58 @@
+# handlers/start.py
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackQueryHandler, ContextTypes
 
-# Тексты карточек "Что такое Карбан?"
 about_cards = [
-    "🌟 Карбан — это сообщество единомышленников, где каждый становится соавтором. Здесь ценится личный рост, поддержка и совместное творчество.",
-    "🎯 В Karban ты проходишь философский тест, выбираешь свой путь (Резидент или Юн), получаешь доступ к личному кабинету, кошельку, дневнику и реферальной системе.",
-    "⚡ Внутри — интерактив: вопрос дня, манифест, банк смыслов, мероприятия, геймификация и поддержка кураторов. Karban — среда для самореализации и новых связей."
+    "🌟 Karban — это сообщество единомышленников, где каждый становится соавтором. Здесь ценится личный рост и поддержка.",
+    "🎯 Пройди тест, выбери путь (Резидент или Юн), получи доступ к личному кабинету, кошельку, рефкам, дневнику, геймификации.",
+    "⚡ Интерактив: вопрос дня, манифест, банк смыслов, мероприятия и поддержка кураторов. Karban — среда самореализации."
 ]
 
 async def start_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Показывает стартовое меню при команде /start"""
     keyboard = [
         [InlineKeyboardButton("Хочу вступить", callback_data='join')],
-        [InlineKeyboardButton("Что такое Карбан?", callback_data='about_card_0')],
+        [InlineKeyboardButton("Что такое Карбан?", callback_data='about_0')],
         [InlineKeyboardButton("Пройти философский тест", callback_data='test')]
     ]
-    
-    text = ("Привет! Ты попал(а) в Karbан — среду единомышленников и нового типа взаимодействия. "
-            "Здесь ты не просто участник — ты соавтор. Сделай первый шаг.")
-    
+    text = (
+        "Привет! Ты попал(а) в Karban — среду единомышленников и нового типа взаимодействия. "
+        "Здесь ты не просто участник — ты соавтор. Сделай первый шаг."
+    )
     if update.message:
         await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
-    elif update.callback_query:
+    else:
         await update.callback_query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
 
 async def join_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработка кнопки 'Хочу вступить' с описанием условий"""
-    query = update.callback_query
-    await query.edit_message_text(
-        "💎 Условия вступления в Karban:\n\n"
-        "• Доступ к закрытому сообществу единомышленников\n"
-        "• Личный кабинет с KRB-кошельком и системой репутации\n"
-        "• Персональный дневник для саморефлексии\n"
-        "• Участие в мероприятиях и инициативах\n"
-        "• Поддержка куратора @Василий\n"
-        "• Стартовый набор: 50 KRB + 1 репутация\n\n"
-        "Стоимость участия: [указать стоимость]\n"
-        "Способы оплаты: [указать способы]\n\n"
-        "Готов(а) присоединиться?",
+    await update.callback_query.edit_message_text(
+        "💎 Условия вступления:\n"
+        "- Доступ в сообщество единомышленников\n"
+        "- Личный кабинет с KRB и репутацией\n"
+        "- Персональный дневник\n"
+        "- Реферальная система и геймификация\n"
+        "- Поддержка куратора @Василий\n"
+        "- Стартовый набор: 50 KRB + 1 реп\n\n"
+        "Стоимость: [указать]\n"
+        "Способы оплаты: [указать]",
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("Оплатить и вступить", callback_data='register')],
-            [InlineKeyboardButton("Назад", callback_data='main_start')]
+            [InlineKeyboardButton("Назад в меню", callback_data='main')]
         ])
     )
 
-async def about_card_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработка карточек 'Что такое Карбан?'"""
+async def about_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    data = query.data
-    idx = int(data.split("_")[-1])
-    
-    text = about_cards[idx]
-    
-    # Кнопки навигации
+    idx   = int(query.data.split("_")[1])
+    text  = f"Карточка {idx+1}/{len(about_cards)}\n\n{about_cards[idx]}"
     buttons = []
-    nav_row = []
-    
     if idx > 0:
-        nav_row.append(InlineKeyboardButton("⬅️ Назад", callback_data=f"about_card_{idx - 1}"))
-    if idx < len(about_cards) - 1:
-        nav_row.append(InlineKeyboardButton("Далее ➡️", callback_data=f"about_card_{idx + 1}"))
-    
-    if nav_row:
-        buttons.append(nav_row)
-    
-    buttons.append([InlineKeyboardButton("В главное меню", callback_data="main_start")])
-    
-    await query.edit_message_text(
-        f"Карточка {idx + 1} из {len(about_cards)}\n\n{text}",
-        reply_markup=InlineKeyboardMarkup(buttons)
-    )
+        buttons.append(InlineKeyboardButton("⬅️ Назад", callback_data=f"about_{idx-1}"))
+    if idx < len(about_cards)-1:
+        buttons.append(InlineKeyboardButton("Далее ➡️", callback_data=f"about_{idx+1}"))
+    buttons.append(InlineKeyboardButton("В меню", callback_data='main'))
+    await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup([buttons]))
 
-# Обработчики для экспорта
-start_handler = CommandHandler("start", start_button)
-start_menu_handler = CallbackQueryHandler(start_button, pattern="^main_start$")
-join_handler = CallbackQueryHandler(join_button, pattern="^join$")
-about_cards_handler = CallbackQueryHandler(about_card_handler, pattern="^about_card_[0-9]+$")
+start_handler        = CommandHandler("start", start_button)
+start_menu_handler   = CallbackQueryHandler(start_button, pattern="^main$")
+join_handler         = CallbackQueryHandler(join_button, pattern="^join$")
+about_cards_handler  = CallbackQueryHandler(about_handler, pattern="^about_[0-9]+$")
